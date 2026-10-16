@@ -51,6 +51,14 @@ class CatalogServiceTest {
     }
 
     @Test
+    void should_tell_whether_update_was_applied_or_already_processed() { // mesaj takibi DUPLICATE'i buradan bilir
+        String id = newId();
+
+        assertThat(service.apply(id, new CatalogUpdate.NewProduct(SKU, "Kupa", "Seramik kupa", PRICE, 1))).isTrue();
+        assertThat(service.apply(id, new CatalogUpdate.NewProduct(SKU, "Kupa", "Seramik kupa", PRICE, 1))).isFalse();
+    }
+
+    @Test
     void should_not_duplicate_product_when_registered_twice() { // US1
         service.apply(newId(), new CatalogUpdate.NewProduct(SKU, "Kupa", "Seramik kupa", PRICE, 1));
         service.apply(newId(), new CatalogUpdate.NewProduct(SKU, "Kupa", "Seramik kupa", PRICE, 1));
