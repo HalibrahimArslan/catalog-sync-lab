@@ -1,4 +1,4 @@
-# rabbit-lab
+# catalog-sync-lab
 
 Backoffice → E-ticaret (Storefront) ürün ve stok senkronizasyonu üzerinden
 RabbitMQ, DDD, Hexagonal ve Onion mimarisini TDD ile öğrenme projesi.
