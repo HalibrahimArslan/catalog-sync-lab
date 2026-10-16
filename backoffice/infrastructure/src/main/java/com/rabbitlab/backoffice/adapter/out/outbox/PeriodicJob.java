@@ -8,10 +8,12 @@ import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Arka planda belirli aralıkla çalışan iş. Uygulama ayağa kalkınca başlar, kapanırken durur
  * ({@code SmartLifecycle}). Bir turdaki hata zamanlayıcıyı öldürmez; sonraki turda tekrar denenir.
+ * {@link #runNow()} ile beklemeden bir tur istenebilir; turlar yine de tek thread'de, sırayla çalışır.
  */
 abstract class PeriodicJob implements SmartLifecycle {
 
@@ -20,6 +22,7 @@ abstract class PeriodicJob implements SmartLifecycle {
 
     private final String name;
     private final Duration interval;
+    private final AtomicBoolean extraRunPending = new AtomicBoolean();
     private ScheduledExecutorService executor;
 
     protected PeriodicJob(String name, Duration interval) {
@@ -34,6 +37,20 @@ abstract class PeriodicJob implements SmartLifecycle {
     public synchronized void start() {
         executor = Executors.newSingleThreadScheduledExecutor(Thread.ofPlatform().name(name).factory());
         executor.scheduleWithFixedDelay(this::safeRun, 0, interval.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Beklemeden bir tur ister. Art arda gelen istekler tek tura birleşir: zaten sırada bekleyen bir tur
+     * varsa yenisi eklenmez. Bayrak tur BAŞLARKEN indirilir; tur sürerken gelen istek bir tur daha ekler,
+     * böylece tur sırasında eklenen satırlar da kaçmaz.
+     */
+    protected synchronized void runNow() {
+        if (executor != null && extraRunPending.compareAndSet(false, true)) {
+            executor.execute(() -> {
+                extraRunPending.set(false);
+                safeRun();
+            });
+        }
     }
 
     private void safeRun() {

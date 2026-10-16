@@ -7,7 +7,8 @@ package com.rabbitlab.contract;
  * nesnesini bilmez. Storefront bu record'ları kendi modeline çevirir.
  */
 public sealed interface BackofficeMessage
-        permits ProductCreatedMessage, ProductUpdatedMessage, ProductDeactivatedMessage, StockUpdatedMessage {
+        permits ProductCreatedMessage, ProductUpdatedMessage, ProductDeactivatedMessage, StockUpdatedMessage,
+        ProductCreatedMessageV2, ProductUpdatedMessageV2 {
 
     String sku();
 

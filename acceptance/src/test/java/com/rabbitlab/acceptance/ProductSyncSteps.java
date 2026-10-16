@@ -15,6 +15,7 @@ import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,6 +47,7 @@ public class ProductSyncSteps {
     private String description;
     private BigDecimal price;
     private String currency;
+    private String parkedMessageId;
 
     @Before
     public void startSystem() {
@@ -54,8 +56,9 @@ public class ProductSyncSteps {
     }
 
     @After
-    public void restartStorefrontIfStopped() {
+    public void restoreSystem() {
         SystemUnderTest.startStorefront(); // senaryo vitrin kapalıyken patladıysa sonrakiler etkilenmesin
+        SystemUnderTest.publishSchemaVersion(1); // US7 Backoffice'i v2'ye geçirdiyse geri al
     }
 
     // --- Backoffice: ürün yöneticisi ve depo görevlisi ---
@@ -190,6 +193,50 @@ public class ProductSyncSteps {
         parkedAfterAttempts(1);
     }
 
+    // --- İşletim: park kuyruğu yönetimi (US6) ve sözleşme sürümü (US7) ---
+
+    @Ve("mesaj {int} denemeden sonra park kuyruğunda görünür")
+    public void visibleInParking(int attempts) {
+        // Yönetim uç noktası mesajı göstermekle kalır, almaz; mesaj park kuyruğunda kalır.
+        await().atMost(EVENTUALLY).untilAsserted(() -> assertThat(parkedMessage()).hasValueSatisfying(message -> {
+            assertThat(((Number) message.get("attempts")).intValue()).isEqualTo(attempts);
+            assertThat(message.get("error").toString()).contains("bilinmeyen ürün");
+            parkedMessageId = message.get("messageId").toString();
+        }));
+    }
+
+    @Ve("operatör park edilen mesajı yeniden oynatır")
+    public void replayParked() {
+        var response = storefront().post().uri("/admin/parking/storefront.stock/{id}/replay", parkedMessageId)
+                .retrieve().toBodilessEntity();
+        assertThat(response.getStatusCode().value()).isEqualTo(204);
+    }
+
+    @Ve("mesaj artık park kuyruğunda değildir")
+    public void noLongerParked() {
+        assertThat(parkedMessage()).isEmpty();
+    }
+
+    @Eğerki("Backoffice sözleşmenin {int}. sürümüyle yayınlamaya başlar")
+    public void backofficePublishes(int schemaVersion) {
+        SystemUnderTest.publishSchemaVersion(schemaVersion);
+    }
+
+    @Ve("Backoffice'in bu ürün için yayınladığı mesajların sürümleri {string} olur")
+    public void publishedVersions(String versions) {
+        List<Integer> expected = Arrays.stream(versions.split(",\\s*")).map(Integer::valueOf).toList();
+        await().atMost(EVENTUALLY).untilAsserted(() ->
+                assertThat(SystemUnderTest.publishedSchemaVersions(sku)).isEqualTo(expected));
+    }
+
+    @Eğerki("vitrinin henüz bilmediği {int}. sürümde bir mesaj gelir")
+    public void messageOfUnknownSchemaVersion(int schemaVersion) {
+        SystemUnderTest.rabbit().send("backoffice.events", "stock.updated", MessageBuilder
+                .withBody("{\"sku\":\"%s\",\"quantity\":4,\"version\":1}".formatted(sku).getBytes(UTF_8))
+                .setContentType("application/json").setType("StockUpdated").setMessageId(UUID.randomUUID().toString())
+                .setHeader("x-schema-version", schemaVersion).build());
+    }
+
     // --- yardımcılar ---
 
     private static RestClient backoffice() {
@@ -206,6 +253,13 @@ public class ProductSyncSteps {
         } catch (HttpClientErrorException.NotFound e) {
             return Optional.empty();
         }
+    }
+
+    /** Yönetim uç noktasından, bu senaryonun SKU'sunu taşıyan park edilmiş stok mesajı. */
+    private Optional<Map<String, Object>> parkedMessage() {
+        List<Map<String, Object>> parked = storefront().get().uri("/admin/parking/storefront.stock?limit=1000")
+                .retrieve().body(JSON_ARRAY);
+        return parked.stream().filter(message -> message.get("body").toString().contains(sku)).findFirst();
     }
 
     private static long messageCount(String queue) {

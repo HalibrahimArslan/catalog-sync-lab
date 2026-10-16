@@ -79,7 +79,7 @@ public class OutboxRelay {
 
     private List<OutboxRow> lockPending() {
         return jdbc.sql("""
-                        select id, message_id::text, message_type, routing_key, payload::text
+                        select id, message_id::text, message_type, routing_key, payload::text, schema_version
                         from outbox
                         where published_at is null
                         order by id
@@ -87,7 +87,7 @@ public class OutboxRelay {
                         for update skip locked""")
                 .param(properties.batchSize())
                 .query((rs, n) -> new OutboxRow(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4),
-                        rs.getString(5)))
+                        rs.getString(5), rs.getInt(6)))
                 .list();
     }
 
@@ -96,6 +96,7 @@ public class OutboxRelay {
                 .setContentType("application/json")
                 .setType(row.messageType())
                 .setMessageId(row.messageId())
+                .setHeader(BackofficeEvents.SCHEMA_VERSION_HEADER, row.schemaVersion()) // satırın sürümü, ayarın değil
                 .setDeliveryMode(MessageDeliveryMode.PERSISTENT)
                 .build();
         CorrelationData correlation = new CorrelationData(row.messageId());
@@ -151,7 +152,8 @@ public class OutboxRelay {
                 .update();
     }
 
-    private record OutboxRow(long id, String messageId, String messageType, String routingKey, String payload) {
+    private record OutboxRow(long id, String messageId, String messageType, String routingKey, String payload,
+                             int schemaVersion) {
     }
 
     private record Sent(OutboxRow row, CorrelationData correlation, String sendError) {

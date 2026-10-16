@@ -101,6 +101,9 @@ class OutboxRelayIT {
         assertThat(created.getMessageProperties().getReceivedRoutingKey()).isEqualTo("product.created");
         assertThat(created.getMessageProperties().getContentType()).isEqualTo("application/json");
         assertThat(created.getMessageProperties().getMessageId()).isEqualTo(messageIdOf(sku, "ProductCreated"));
+        // P4-M3: varsayılan ayarda v1 yayınlanır ve sürüm başlıkta yazar.
+        assertThat(created.getMessageProperties().<Integer>getHeader(BackofficeEvents.SCHEMA_VERSION_HEADER))
+                .isEqualTo(1);
         // Gövde bir JSON nesnesi; jsonb anahtar sırasını ve boşlukları normalleştirir, bu yüzden metin
         // değil alan karşılaştırıyoruz.
         assertThat(json.readTree(created.getBody()).get("sku").asString()).isEqualTo(sku.value());

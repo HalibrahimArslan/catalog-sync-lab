@@ -23,12 +23,14 @@ spring:
 backoffice:
   outbox:
     scheduling-enabled: true
-    poll-interval: 500ms
+    notify-enabled: true  # outbox'a satır eklenince relay anında uyanır (LISTEN/NOTIFY)
+    poll-interval: 5s     # yedek: bildirim kaçarsa en geç bu kadar gecikir
     batch-size: 100
     confirm-timeout: 5s
     cleanup-enabled: true
     cleanup-interval: 1h
     retention: 7d       # yayınlanmış satır bu süreden sonra silinir
+    schema-version: 1   # yayınlanan sözleşme sürümü; 2'ye ancak Storefront iki sürümü okuyunca geçilir (P4-M3)
 
 server:
   port: 8081

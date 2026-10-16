@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.rabbitlab</groupId>
         <artifactId>backoffice</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.4.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>backoffice-infrastructure</artifactId>
@@ -47,10 +47,10 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
+        <!-- compile scope: LISTEN/NOTIFY için sürücünün PGConnection API'si gerekiyor (P4-M1). -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Test -->

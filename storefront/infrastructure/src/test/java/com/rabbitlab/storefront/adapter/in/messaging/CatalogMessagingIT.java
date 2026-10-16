@@ -2,6 +2,8 @@ package com.rabbitlab.storefront.adapter.in.messaging;
 
 import com.rabbitlab.contract.BackofficeEvents;
 import com.rabbitlab.contract.BackofficeMessage;
+import com.rabbitlab.contract.Money;
+import com.rabbitlab.contract.ProductCreatedMessageV2;
 import com.rabbitlab.contract.ProductCreatedMessage;
 import com.rabbitlab.contract.ProductDeactivatedMessage;
 import com.rabbitlab.contract.ProductUpdatedMessage;
@@ -13,6 +15,7 @@ import com.rabbitlab.storefront.domain.Sku;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.core.MessageBuilderSupport;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -169,6 +172,27 @@ class CatalogMessagingIT {
         await().atMost(TIMEOUT).until(() -> processedCount(messageId) == 1);
     }
 
+    @Test
+    void should_sync_catalog_from_v2_messages() { // P4-M3: sürüm başlığı RabbitMQ'dan geçip çevirmene ulaşıyor
+        publish(new ProductCreatedMessageV2(sku, "Kupa", null, new Money(new BigDecimal("80.00"), "TRY"), 1),
+                UUID.randomUUID().toString(), 2);
+        publish(new StockUpdatedMessage(sku, 2, 1), UUID.randomUUID().toString(), 2);
+
+        await().atMost(TIMEOUT).untilAsserted(() -> assertThat(item()).satisfies(item -> {
+            assertThat(item.price().amount()).isEqualByComparingTo("80");
+            assertThat(item.stock()).isEqualTo(2);
+        }));
+    }
+
+    @Test
+    void should_park_message_of_unknown_schema_version_immediately() { // P4-M3
+        publish(created(), UUID.randomUUID().toString(), 3);
+
+        Message parked = awaitParked("storefront.catalog.dlq");
+        assertThat(parked.getMessageProperties().<String>getHeader("x-error")).contains("3");
+        assertThat(parked.getMessageProperties().<Long>getHeader("x-attempts")).isEqualTo(1L);
+    }
+
     // --- yardımcılar ---
 
     @Autowired
@@ -188,12 +212,20 @@ class CatalogMessagingIT {
     }
 
     private void publish(BackofficeMessage message, String messageId) {
-        rabbit.send(BackofficeEvents.EXCHANGE, BackofficeEvents.routingKeyOf(message), MessageBuilder
+        publish(message, messageId, null);
+    }
+
+    /** {@code schemaVersion} null ise başlık konmaz (P4-M3 öncesi mesajlar gibi). */
+    private void publish(BackofficeMessage message, String messageId, Integer schemaVersion) {
+        MessageBuilderSupport<Message> builder = MessageBuilder
                 .withBody(json.writeValueAsBytes(message))
                 .setContentType("application/json")
                 .setType(BackofficeEvents.typeOf(message))
-                .setMessageId(messageId)
-                .build());
+                .setMessageId(messageId);
+        if (schemaVersion != null) {
+            builder.setHeader(BackofficeEvents.SCHEMA_VERSION_HEADER, schemaVersion);
+        }
+        rabbit.send(BackofficeEvents.EXCHANGE, BackofficeEvents.routingKeyOf(message), builder.build());
     }
 
     private void publishRaw(String type, String routingKey, String body) {
