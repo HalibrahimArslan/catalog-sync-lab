@@ -9,7 +9,7 @@
 | Katalog | `Catalog` | Storefront | Vitrindeki ürünlerin tamamı |
 | Stok kodu | `sku` | İkisi | Ürünün benzersiz kimliği |
 | Stok miktarı | `quantity` / `stock` | İkisi | Negatif olamaz |
-| Fiyat | `price` + `currency` | İkisi | > 0 |
+| Fiyat | `price` + `currency` (v1), `price: Money` (v2) | İkisi | > 0 |
 | Ürün versiyonu | `version` / `detailsVersion` | İkisi | Ürün bilgisi event'lerinde artan sayı |
 | Stok versiyonu | `version` / `stockVersion` | İkisi | `StockUpdated`'de artan sayı |
 | Aktif / Pasif | `active` | İkisi | Pasif ürün satışta görünmez; silme yok |
@@ -20,3 +20,5 @@
 | Ürün pasife alındı | `ProductDeactivated` | Event | |
 | Vitrin | Storefront | Context | E-ticaret tarafı |
 | Park kuyruğu | `*.dlq` | Altyapı | İşlenemeyen mesajların bekletildiği yer (Dead Letter Queue) |
+| Yeniden oynatma | `replay` | Storefront | Park edilen mesajı ana kuyruğa geri göndermek; deneme sayacı sıfırlanır |
+| Sözleşme sürümü | `x-schema-version` | Sözleşme | Mesaj gövdesinin biçimi; başlıkta taşınır, başlıksız mesaj v1 |

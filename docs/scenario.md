@@ -67,6 +67,17 @@ Depo görevlisi olarak, saydığım stoğun e-ticarette doğru görünmesini ist
 - **Given** SKU-9 katalogda yok **When** StockUpdated(SKU-9) gelir **Then** mesaj gecikmeli tekrar denenir; 3 denemeden sonra DLQ'ya düşer.
 - **Given** herhangi bir durum **When** StockUpdated(stok -5) gelir **Then** mesaj tekrar denenmeden DLQ'ya düşer, diğer mesajlar işlenmeye devam eder.
 
+### US6 — Park edilen mesaj sorun düzeltilince yeniden işlenir
+Sistemi işleten kişi olarak, park edilen mesajı görmek ve sorunu düzelttikten sonra tekrar işletmek istiyorum.
+- **Given** SKU-9 için StockUpdated 3 denemeden sonra park edildi **When** park kuyruğu listelenir **Then** mesaj, hata sebebi ve deneme sayısıyla görünür; kuyrukta kalır.
+- **Given** aynı mesaj park edilmiş **When** SKU-9 Backoffice'te oluşturulur ve mesaj yeniden oynatılır **Then** stok vitrine yansır, mesaj park kuyruğundan çıkar.
+- **Given** yeniden oynatılan mesaj yine başarısız **Then** deneme sayacı sıfırdan başlar (3 yeni deneme).
+
+### US7 — Mesaj sözleşmesi kesintisiz değişir
+- **Given** vitrin v1 ve v2'yi okuyor **When** Backoffice v2 yayınlamaya başlar **Then** değişiklikler vitrine yansımaya devam eder.
+- **Given** vitrin kapalı, kuyrukta v1 mesajlar bekliyor **When** Backoffice v2'ye geçer ve vitrin açılır **Then** v1 ve v2 mesajların hepsi işlenir.
+- **Given** herhangi bir durum **When** vitrinin bilmediği bir sürümde mesaj gelir **Then** tekrar denenmeden DLQ'ya düşer (vitrin güncellenince US6 ile yeniden oynatılır).
+
 ## Faz Eşlemesi
 | Milestone | Senaryodaki karşılığı |
 |---|---|
@@ -77,6 +88,7 @@ Depo görevlisi olarak, saydığım stoğun e-ticarette doğru görünmesini ist
 | P1-M5 Hata | Bilinmeyen ürün → TTL+DLX retry → DLQ (US5-2); negatif stok → doğrudan DLQ (US5-3) |
 | Faz 2 | Backoffice: `Product` aggregate + outbox; Storefront: `CatalogItem` + idempotent consumer; US1-US5 → Cucumber |
 | Faz 3 | Aynı davranış Onion katmanlarıyla |
+| Faz 4 | İşletim: LISTEN/NOTIFY ile anında yayın; park kuyruğu yönetimi (US6); sözleşme sürümü (US7) |
 
 ## Faz 2 için açık soru (cevaplandı)
 - Stok, `Product` aggregate'inin içinde mi olmalı yoksa ayrı bir `Inventory` aggregate'i mi? (İki ayrı versiyon sayacı bu sorunun ilk ipucu.)

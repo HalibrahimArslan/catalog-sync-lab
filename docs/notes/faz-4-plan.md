@@ -4,6 +4,8 @@ Mimari Faz 3'teki gibi (Onion, halka başına modül). Bu faz, sistemi **çalı�
 çözüyor: Faz 2 ve 3'ten kalan acıtan noktalar 6, 7 ve 8. Çalışma şekli aynı: `test:` (kırmızı) →
 `feat:` (yeşil), sonunda `p4-mN` tag'i.
 
+**Durum:** M1–M4 tamamlandı. İnceleme için: [faz-4-inceleme.md](faz-4-inceleme.md)
+
 ## Kararlar
 | Konu | Seçim | Gerekçe | Alternatif |
 |---|---|---|---|
