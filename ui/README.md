@@ -27,6 +27,7 @@ npm run dev        # http://localhost:5173
 | **Mesajlar** | Mesaj takibi (Celery'deki Flower gibi): her mesajın durumu (yayın bekliyor / yayınlanamıyor / yolda / işlendi / tekrar denenecek / park edildi / yeniden oynatıldı), deneme sayısı ve hatası. SKU ya da message-id ile ara, duruma göre süz; bir mesaja tıklayınca Backoffice'ten vitrine yolculuğu (her deneme, saati ve hatasıyla), gövdesi ve park edildiyse "Yeniden oynat" |
 | **Elle dene** | Backoffice'e komut gönder (oluştur, güncelle, stok, satıştan kaldır); vitrinin ne zaman güncellendiğini yan tarafta izle |
 | **Kuyruklar ve park** | Kuyruk derinlikleri; park kuyruklarındaki mesajlar, sebepleri ve deneme sayıları; tek tek ya da toplu yeniden oynatma |
+| **API** | Backoffice ve Storefront'un uç noktaları, OpenAPI dokümanından (`/v3/api-docs`, springdoc) Swagger UI ile; "Try it out" ile buradan denenir. İstekler proxy üzerinden gider, `/admin/**` için kimlik bilgisini proxy ekler |
 
 Elle adım gerektiren senaryolar: **US5-1** (vitrini kapat/aç), **US7** geçiş senaryoları (Backoffice'i
 `--backoffice.outbox.schema-version=2` ile yeniden başlat, sonra v1'e döndür). Her elle adımdan sonra

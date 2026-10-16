@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { backoffice, httpDriver, rabbitmq, storefront } from './api/http-driver'
+import { ApiView } from './components/ApiView'
 import { ManualView } from './components/ManualView'
 import { MessagesView } from './components/MessagesView'
 import { QueuesView } from './components/QueuesView'
@@ -8,7 +9,7 @@ import { usePolling, useScenarioRunner } from './hooks'
 import { cx } from './components/styles'
 import { ThemeSwitch } from './theme/ThemeSwitch'
 
-const TABS = { scenarios: 'Senaryolar', messages: 'Mesajlar', manual: 'Elle dene', queues: 'Kuyruklar ve park' } as const
+const TABS = { scenarios: 'Senaryolar', messages: 'Mesajlar', manual: 'Elle dene', queues: 'Kuyruklar ve park', api: 'API' } as const
 type Tab = keyof typeof TABS
 
 export default function App() {
@@ -48,6 +49,7 @@ export default function App() {
         {tab === 'messages' && <MessagesView />}
         {tab === 'manual' && <ManualView />}
         {tab === 'queues' && <QueuesView />}
+        {tab === 'api' && <ApiView />}
       </main>
     </div>
   )

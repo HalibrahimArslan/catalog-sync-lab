@@ -1,7 +1,7 @@
 import type { Driver, RawMessage, Tap, TappedMessage } from '../scenarios/driver'
 import type {
   CatalogView, DeliveryEntry, DeliveryOutcome, DeliverySummary, NewProduct, OutboxEntry, OutboxState, ParkedMessage,
-  ProductDetails, QueueInfo,
+  OpenApiDoc, ProductDetails, QueueInfo,
 } from './types'
 
 /**
@@ -90,6 +90,8 @@ export const backoffice = {
   outbox: async ({ sku, messageId, limit = 50, state }: MessageFilter & { state?: OutboxState }): Promise<OutboxEntry[]> =>
     (await call(`${BACKOFFICE}/admin/outbox?${queryString({ sku, messageId, state, limit })}`)).json(),
   outboxStats: async (): Promise<Record<OutboxState, number>> => (await call(`${BACKOFFICE}/admin/outbox/stats`)).json(),
+  /** OpenAPI dokümanı (springdoc). */
+  apiDocs: async (): Promise<OpenApiDoc> => (await call(`${BACKOFFICE}/v3/api-docs`)).json(),
 }
 
 export const storefront = {
@@ -123,6 +125,8 @@ export const storefront = {
     return response.json()
   },
   messageStats: async (): Promise<Record<DeliveryOutcome, number>> => (await call(`${STOREFRONT}/admin/messages/stats`)).json(),
+  /** OpenAPI dokümanı (springdoc). */
+  apiDocs: async (): Promise<OpenApiDoc> => (await call(`${STOREFRONT}/v3/api-docs`)).json(),
 }
 
 interface ManagementMessage {
