@@ -17,7 +17,8 @@ java -jar storefront/infrastructure/target/storefront-0.4.0-SNAPSHOT-exec.jar &
 npm install
 npm run dev        # http://localhost:5173
 ```
-Üst sağdaki üç nokta servislerin ayakta olup olmadığını gösterir.
+Üst sağdaki üç nokta servislerin ayakta olup olmadığını gösterir; yanındaki düğmeyle tema seçilir
+(açık / koyu / sistem; seçim tarayıcıda hatırlanır).
 
 ## Sekmeler
 | Sekme | Ne yapar |
