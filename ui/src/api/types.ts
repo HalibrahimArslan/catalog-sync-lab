@@ -36,3 +36,47 @@ export interface QueueInfo {
 }
 
 export const CONSUMER_QUEUES = ['storefront.catalog', 'storefront.stock'] as const
+
+// --- Mesaj takibi ---
+
+export type OutboxState = 'PENDING' | 'FAILING' | 'PUBLISHED'
+
+/** Backoffice outbox'ındaki bir mesaj (GET /admin/outbox). */
+export interface OutboxEntry {
+  messageId: string
+  sku: string
+  type: string
+  routingKey: string
+  schemaVersion: number
+  payload: string
+  createdAt: string
+  publishedAt: string | null
+  attempts: number
+  lastError: string | null
+  state: OutboxState
+}
+
+export type DeliveryOutcome = 'PROCESSED' | 'DUPLICATE' | 'RETRY' | 'PARKED' | 'REPLAYED'
+
+/** Storefront teslimat geçmişinde bir mesajın özeti (GET /admin/messages). */
+export interface DeliverySummary {
+  messageId: string | null
+  type: string | null
+  sku: string | null
+  queue: string
+  schemaVersion: number | null
+  state: DeliveryOutcome
+  attempts: number
+  lastError: string | null
+  firstSeen: string
+  lastSeen: string
+}
+
+/** Tek bir deneme (GET /admin/messages/{id}). */
+export interface DeliveryEntry {
+  attempt: number
+  outcome: DeliveryOutcome
+  error: string | null
+  queue: string
+  at: string
+}

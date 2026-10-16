@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { backoffice, httpDriver, rabbitmq, storefront } from './api/http-driver'
 import { ManualView } from './components/ManualView'
+import { MessagesView } from './components/MessagesView'
 import { QueuesView } from './components/QueuesView'
 import { ScenariosView } from './components/ScenariosView'
 import { usePolling, useScenarioRunner } from './hooks'
 
-const TABS = { scenarios: 'Senaryolar', manual: 'Elle dene', queues: 'Kuyruklar ve park' } as const
+const TABS = { scenarios: 'Senaryolar', messages: 'Mesajlar', manual: 'Elle dene', queues: 'Kuyruklar ve park' } as const
 type Tab = keyof typeof TABS
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
       </nav>
       <main>
         {tab === 'scenarios' && <ScenariosView runner={runner} />}
+        {tab === 'messages' && <MessagesView />}
         {tab === 'manual' && <ManualView />}
         {tab === 'queues' && <QueuesView />}
       </main>

@@ -16,6 +16,7 @@ import com.rabbitlab.storefront.domain.Sku;
 import org.springframework.amqp.core.Message;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -49,6 +50,30 @@ class MessageTranslator {
             // bilinmeyen tip ya da sürüm (sözleşme: IllegalArgumentException)
             throw new InvalidMessageException(
                     "Mesaj okunamadı (" + type + ", sürüm " + versionHeader + "): " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Mesaj takibi için: gövdedeki SKU, mesaj bozuk olsa da okunabildiği kadarıyla. Okunamazsa {@code null};
+     * hiçbir zaman exception fırlatmaz.
+     */
+    String skuOf(byte[] body) {
+        try {
+            JsonNode sku = json.readTree(body).get("sku");
+            return sku == null || !sku.isString() ? null : sku.asString();
+        } catch (JacksonException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /** Mesaj takibi için: mesajın okunacağı sözleşme sürümü; başlık okunamazsa {@code null}. */
+    static Integer readSchemaVersion(Message message) {
+        // Object'e açıkça ata: getHeader jenerik; aksi hâlde derleyici bu metodun kendisini seçebilir.
+        Object header = message.getMessageProperties().getHeader(BackofficeEvents.SCHEMA_VERSION_HEADER);
+        try {
+            return schemaVersionOf(header);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 

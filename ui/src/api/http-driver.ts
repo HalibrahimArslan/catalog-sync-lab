@@ -1,5 +1,8 @@
 import type { Driver, RawMessage, Tap, TappedMessage } from '../scenarios/driver'
-import type { CatalogView, NewProduct, ParkedMessage, ProductDetails, QueueInfo } from './types'
+import type {
+  CatalogView, DeliveryEntry, DeliveryOutcome, DeliverySummary, NewProduct, OutboxEntry, OutboxState, ParkedMessage,
+  ProductDetails, QueueInfo,
+} from './types'
 
 /**
  * Gerçek sistemle konuşan sürücü. Üç servise Vite proxy'si üzerinden ulaşır (bkz. vite.config.ts):
@@ -41,6 +44,21 @@ async function detailOf(response: Response) {
   }
 }
 
+/** Tanımsız alanları atlayarak sorgu metni kurar. */
+function queryString(params: Record<string, string | number | undefined>) {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') search.set(key, String(value))
+  }
+  return search.toString()
+}
+
+export interface MessageFilter {
+  sku?: string
+  messageId?: string
+  limit?: number
+}
+
 const json = (body: unknown): RequestInit => ({
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(body),
@@ -68,6 +86,10 @@ export const backoffice = {
     void (await call(`${BACKOFFICE}/products/${encodeURIComponent(sku)}/stock`, { method: 'PUT', ...json({ quantity }) })),
   deactivate: async (sku: string) =>
     void (await call(`${BACKOFFICE}/products/${encodeURIComponent(sku)}/deactivate`, { method: 'POST' })),
+  /** Mesaj takibi: outbox'taki mesajlar. */
+  outbox: async ({ sku, messageId, limit = 50, state }: MessageFilter & { state?: OutboxState }): Promise<OutboxEntry[]> =>
+    (await call(`${BACKOFFICE}/admin/outbox?${queryString({ sku, messageId, state, limit })}`)).json(),
+  outboxStats: async (): Promise<Record<OutboxState, number>> => (await call(`${BACKOFFICE}/admin/outbox/stats`)).json(),
 }
 
 export const storefront = {
@@ -90,6 +112,17 @@ export const storefront = {
   },
   replayAll: async (queue: string): Promise<number> =>
     (await (await call(`${STOREFRONT}/admin/parking/${queue}/replay`, { method: 'POST' })).json()).replayed,
+  /** Mesaj takibi: teslimat geçmişindeki mesajlar, son durumlarıyla. */
+  messages: async ({ sku, messageId, limit = 50, state }: MessageFilter & { state?: DeliveryOutcome }): Promise<DeliverySummary[]> =>
+    (await call(`${STOREFRONT}/admin/messages?${queryString({ sku, messageId, state, limit })}`)).json(),
+  /** Tek mesajın tüm denemeleri; vitrin hiç görmediyse {@code null}. */
+  message: async (messageId: string): Promise<{ summary: DeliverySummary; attempts: DeliveryEntry[] } | null> => {
+    const response = await fetch(`${STOREFRONT}/admin/messages/${encodeURIComponent(messageId)}`)
+    if (response.status === 404) return null
+    if (!response.ok) throw new Error(`Storefront ${response.status}: ${await detailOf(response)}`)
+    return response.json()
+  },
+  messageStats: async (): Promise<Record<DeliveryOutcome, number>> => (await call(`${STOREFRONT}/admin/messages/stats`)).json(),
 }
 
 interface ManagementMessage {
