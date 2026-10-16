@@ -59,7 +59,8 @@ class AdminSecurityTest {
     @Test
     void should_ask_for_credentials_on_admin_endpoints() {
         assertThat(mvc.get().uri("/admin/parking")).hasStatus(HttpStatus.UNAUTHORIZED)
-                .headers().hasValueSatisfying(HttpHeaders.WWW_AUTHENTICATE, value -> assertThat(value).contains("Basic"));
+                .satisfies(result -> assertThat(result.getResponse().getHeader(HttpHeaders.WWW_AUTHENTICATE))
+                        .as("tarayıcı ve istemci Basic ile sorması gerektiğini bilsin").startsWith("Basic"));
         assertThat(mvc.get().uri("/admin/messages")).hasStatus(HttpStatus.UNAUTHORIZED);
         assertThat(mvc.post().uri("/admin/parking/storefront.stock/replay")).hasStatus(HttpStatus.UNAUTHORIZED);
         verifyNoInteractions(log);

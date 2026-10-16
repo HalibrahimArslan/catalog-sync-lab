@@ -20,7 +20,8 @@ import java.util.Map;
  * Mesaj takibi: mesajların durumu ve tek bir mesajın deneme geçmişi (Celery'deki Flower'ın görevler
  * sayfası gibi). Backoffice'in {@code /admin/outbox} uç noktasıyla aynı message-id üzerinden birleşir.
  *
- * <p>Kimlik doğrulama yok (park kuyruğu uç noktaları gibi bilinçli kapsam dışı).
+ * <p>Yalnızca yöneticiye açık (HTTP Basic, {@link AdminSecurityConfiguration}); kullanıcı adı ve şifre
+ * {@code ADMIN_USER} / {@code ADMIN_PASSWORD} ayarından.
  *
  * <pre>
  *   GET /admin/messages?sku=&amp;messageId=&amp;state=PROCESSED|DUPLICATE|RETRY|PARKED|REPLAYED&amp;limit=50

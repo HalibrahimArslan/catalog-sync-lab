@@ -207,7 +207,7 @@ public class ProductSyncSteps {
 
     @Ve("operatör park edilen mesajı yeniden oynatır")
     public void replayParked() {
-        var response = storefront().post().uri("/admin/parking/storefront.stock/{id}/replay", parkedMessageId)
+        var response = storefrontAdmin().post().uri("/admin/parking/storefront.stock/{id}/replay", parkedMessageId)
                 .retrieve().toBodilessEntity();
         assertThat(response.getStatusCode().value()).isEqualTo(204);
     }
@@ -247,6 +247,13 @@ public class ProductSyncSteps {
         return RestClient.create(SystemUnderTest.storefrontUrl());
     }
 
+    /** Yönetim uç noktaları ({@code /admin/**}) HTTP Basic ister. */
+    private static RestClient storefrontAdmin() {
+        return RestClient.builder().baseUrl(SystemUnderTest.storefrontUrl())
+                .defaultHeaders(headers -> headers.setBasicAuth(SystemUnderTest.ADMIN_USER, SystemUnderTest.ADMIN_PASSWORD))
+                .build();
+    }
+
     private Optional<Map<String, Object>> storefrontItem() {
         try {
             return Optional.ofNullable(storefront().get().uri("/catalog/{sku}", sku).retrieve().body(JSON_OBJECT));
@@ -257,7 +264,7 @@ public class ProductSyncSteps {
 
     /** Yönetim uç noktasından, bu senaryonun SKU'sunu taşıyan park edilmiş stok mesajı. */
     private Optional<Map<String, Object>> parkedMessage() {
-        List<Map<String, Object>> parked = storefront().get().uri("/admin/parking/storefront.stock?limit=1000")
+        List<Map<String, Object>> parked = storefrontAdmin().get().uri("/admin/parking/storefront.stock?limit=1000")
                 .retrieve().body(JSON_ARRAY);
         return parked.stream().filter(message -> message.get("body").toString().contains(sku)).findFirst();
     }

@@ -30,6 +30,9 @@ storefront:
     cleanup-enabled: true
     cleanup-interval: 1h
     retention: 7d     # işlenmiş kimlik bu süreden sonra unutulur
+  admin:                                # /admin/parking (park kuyruğu), /admin/messages (mesaj takibi) için HTTP Basic
+    username: ${ADMIN_USER:admin}
+    password: ${ADMIN_PASSWORD:admin}    # yerel geliştirme varsayılanı; gerçek ortamda ADMIN_PASSWORD ile değiştir
 
 server:
   port: 8082

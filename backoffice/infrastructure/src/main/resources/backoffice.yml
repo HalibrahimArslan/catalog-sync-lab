@@ -31,6 +31,9 @@ backoffice:
     cleanup-interval: 1h
     retention: 7d       # yayınlanmış satır bu süreden sonra silinir
     schema-version: 1   # yayınlanan sözleşme sürümü; 2'ye ancak Storefront iki sürümü okuyunca geçilir (P4-M3)
+  admin:                                # /admin/outbox (mesaj takibi) için HTTP Basic
+    username: ${ADMIN_USER:admin}
+    password: ${ADMIN_PASSWORD:admin}    # yerel geliştirme varsayılanı; gerçek ortamda ADMIN_PASSWORD ile değiştir
 
 server:
   port: 8081

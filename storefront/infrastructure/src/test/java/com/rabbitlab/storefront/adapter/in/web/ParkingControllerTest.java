@@ -24,8 +24,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * P4-M2 — Park kuyruğunun yönetim uç noktaları. Kimlik doğrulama yok (bilinçli kapsam dışı); gerçek
- * sistemde bu uç noktalar ayrı bir port ya da yetki arkasında olurdu.
+ * P4-M2 — Park kuyruğunun yönetim uç noktaları. Burada yönetici olarak ({@code @WithMockUser});
+ * kimlik doğrulamanın kendisi {@link AdminSecurityTest}'te.
  */
 @Import(AdminSecurityConfiguration.class)
 @WithMockUser(roles = "ADMIN")

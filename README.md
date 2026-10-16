@@ -64,8 +64,9 @@ curl -X PUT localhost:8081/products/SKU-1/stock -H 'Content-Type: application/js
 curl localhost:8082/catalog
 
 # Park kuyruğu (P4-M2): park edilenleri gör, sorunu düzeltince yeniden oynat
-curl localhost:8082/admin/parking/storefront.stock
-curl -X POST localhost:8082/admin/parking/storefront.stock/replay
+# /admin/** yöneticiye açık (HTTP Basic); yerelde varsayılan admin / admin, ADMIN_USER / ADMIN_PASSWORD ile değişir
+curl -u admin:admin localhost:8082/admin/parking/storefront.stock
+curl -u admin:admin -X POST localhost:8082/admin/parking/storefront.stock/replay
 ```
 
 Sözleşme sürümü (P4-M3): Backoffice varsayılan olarak v1 yayınlar; v2'ye geçmek için

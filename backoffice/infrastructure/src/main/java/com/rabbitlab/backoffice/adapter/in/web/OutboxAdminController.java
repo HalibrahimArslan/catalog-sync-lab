@@ -18,7 +18,8 @@ import java.util.Map;
  * Mesaj takibinin Backoffice tarafı: outbox'taki mesajlar ve durumları. Storefront'un
  * {@code /admin/messages} uç noktasıyla aynı message-id üzerinden birleşir.
  *
- * <p>Kimlik doğrulama yok (Faz 4'teki yönetim uç noktaları gibi bilinçli kapsam dışı).
+ * <p>Yalnızca yöneticiye açık (HTTP Basic, {@link AdminSecurityConfiguration}); kullanıcı adı ve şifre
+ * {@code ADMIN_USER} / {@code ADMIN_PASSWORD} ayarından.
  *
  * <pre>
  *   GET /admin/outbox?sku=&amp;messageId=&amp;state=PENDING|FAILING|PUBLISHED&amp;limit=50

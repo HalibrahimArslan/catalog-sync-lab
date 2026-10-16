@@ -24,7 +24,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/** Mesaj takibinin Backoffice tarafı: outbox'taki mesajlar ve durumları. Kimlik doğrulama yok (kapsam dışı). */
+/** Mesaj takibinin Backoffice tarafı: outbox'taki mesajlar ve durumları. Yönetici olarak; kimlik doğrulama {@link AdminSecurityTest}'te. */
 @Import(AdminSecurityConfiguration.class)
 @WithMockUser(roles = "ADMIN")
 @WebMvcTest(OutboxAdminController.class)
