@@ -1,5 +1,9 @@
 package com.rabbitlab.storefront.adapter.in.messaging;
 
+import com.rabbitlab.contract.BackofficeEvents;
+import com.rabbitlab.storefront.application.DeliveryAttempt;
+import com.rabbitlab.storefront.application.DeliveryLog;
+import com.rabbitlab.storefront.application.DeliveryOutcome;
 import com.rabbitlab.storefront.application.ParkedMessage;
 import com.rabbitlab.storefront.application.ParkedMessages;
 import com.rabbitmq.client.AMQP;
@@ -35,6 +39,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * park sırasında bu başlık mesajla birlikte kopyalanıyor. Silinmezse yeniden oynatılan mesaj ilk
  * denemede tekrar park edilirdi. Park bilgisi başlıkları ({@code x-error} vb.) da silinir: mesaj
  * tekrar park edilirse yenileri yazılır.
+ *
+ * <p>Mesaj takibi: her yeniden oynatma teslimat geçmişine {@code REPLAYED} olarak yazılır.
  */
 @Component
 class RabbitParkedMessages implements ParkedMessages {
@@ -45,9 +51,13 @@ class RabbitParkedMessages implements ParkedMessages {
     private static final Set<String> PARKING_HEADERS = Set.of("x-error", "x-original-queue", "x-attempts");
 
     private final RabbitTemplate rabbit;
+    private final MessageTranslator translator;
+    private final DeliveryLog deliveries;
 
-    RabbitParkedMessages(RabbitTemplate rabbit) {
+    RabbitParkedMessages(RabbitTemplate rabbit, MessageTranslator translator, DeliveryLog deliveries) {
         this.rabbit = rabbit;
+        this.translator = translator;
+        this.deliveries = deliveries;
     }
 
     @Override
@@ -84,6 +94,7 @@ class RabbitParkedMessages implements ParkedMessages {
                         republish(channel, queue, response);
                         channel.waitForConfirmsOrDie(CONFIRM_TIMEOUT_MS);
                         channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
+                        recordReplay(queue, response);
                         return true;
                     }
                 }
@@ -107,15 +118,18 @@ class RabbitParkedMessages implements ParkedMessages {
                 long parked = channel.messageCount(parking);
                 int count = 0;
                 long lastTag = 0;
+                List<GetResponse> sent = new ArrayList<>();
                 GetResponse response;
                 while (count < parked && (response = channel.basicGet(parking, false)) != null) {
                     republish(channel, queue, response);
                     lastTag = response.getEnvelope().getDeliveryTag();
+                    sent.add(response);
                     count++;
                 }
                 if (count > 0) {
                     channel.waitForConfirmsOrDie(CONFIRM_TIMEOUT_MS);
                     channel.basicAck(lastTag, true);
+                    sent.forEach(r -> recordReplay(queue, r));
                 }
                 return count;
             } finally {
@@ -124,6 +138,20 @@ class RabbitParkedMessages implements ParkedMessages {
         });
         log.info("{} kuyruğunda park edilen {} mesaj yeniden oynatıldı", queue, replayed);
         return replayed == null ? 0 : replayed;
+    }
+
+    /** Teslimat geçmişine "yeniden oynatıldı" yazar; yazamazsa yeniden oynatmayı etkilemez. */
+    private void recordReplay(String queue, GetResponse response) {
+        AMQP.BasicProperties props = response.getProps();
+        Object header = props.getHeaders() == null ? null : props.getHeaders().get(BackofficeEvents.SCHEMA_VERSION_HEADER);
+        Integer version = header == null ? Integer.valueOf(1) : header instanceof Number n ? n.intValue() : null;
+        try {
+            deliveries.record(new DeliveryAttempt(props.getMessageId(), queue, props.getType(),
+                    translator.skuOf(response.getBody()), version, 0,
+                    DeliveryOutcome.REPLAYED, null));
+        } catch (RuntimeException e) {
+            log.warn("Teslimat geçmişine yazılamadı ({} REPLAYED): {}", props.getMessageId(), e.getMessage());
+        }
     }
 
     private static String parkingQueueOf(String queue) {

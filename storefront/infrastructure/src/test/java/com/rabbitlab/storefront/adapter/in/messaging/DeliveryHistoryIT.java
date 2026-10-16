@@ -7,6 +7,7 @@ import com.rabbitlab.contract.StockUpdatedMessage;
 import com.rabbitlab.storefront.TestcontainersConfiguration;
 import com.rabbitlab.storefront.application.DeliveryEntry;
 import com.rabbitlab.storefront.application.DeliveryLog;
+import com.rabbitlab.storefront.application.DeliveryOutcome;
 import com.rabbitlab.storefront.application.DeliveryQuery;
 import com.rabbitlab.storefront.application.DeliverySummary;
 import com.rabbitlab.storefront.application.ParkedMessages;
@@ -110,7 +111,7 @@ class DeliveryHistoryIT {
         publish(created());
 
         await().atMost(TIMEOUT).untilAsserted(() -> {
-            List<?> outcomes = outcomes(id);
+            List<DeliveryOutcome> outcomes = outcomes(id);
             assertThat(outcomes.getFirst()).isEqualTo(RETRY);
             assertThat(outcomes.getLast()).isEqualTo(PROCESSED);
         });
@@ -149,7 +150,7 @@ class DeliveryHistoryIT {
         return new ProductCreatedMessage(sku, "Kupa", null, new BigDecimal("100.00"), "TRY", 1);
     }
 
-    private List<?> outcomes(String id) {
+    private List<DeliveryOutcome> outcomes(String id) {
         return log.history(id).stream().map(DeliveryEntry::outcome).toList();
     }
 

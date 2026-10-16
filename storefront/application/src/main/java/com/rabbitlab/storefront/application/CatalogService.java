@@ -32,16 +32,17 @@ public final class CatalogService {
      * hiçbir şey yapmaz. Kimlik kaydı ve güncelleme tek transaction: biri olmazsa hiçbiri olmaz.
      *
      * @param updateId değişikliğin kimliği (Backoffice outbox'ındaki message_id)
+     * @return uygulandıysa {@code true}; aynı kimlik daha önce işlendiyse {@code false}
      * @throws UnknownProductException ürün katalogda yoksa (tekrar denenebilir)
      * @throws InvalidValueException kimlik yoksa veya değişiklik kurallara aykırıysa (tekrar denemek işe yaramaz)
      */
-    public void apply(String updateId, CatalogUpdate update) {
+    public boolean apply(String updateId, CatalogUpdate update) {
         if (updateId == null || updateId.isBlank()) {
             throw new InvalidValueException("Değişiklik kimliği (message-id) boş olamaz: " + update);
         }
-        transaction.execute(() -> {
+        return transaction.execute(() -> {
             if (!processed.markProcessed(updateId)) {
-                return; // daha önce işlendi
+                return false; // daha önce işlendi
             }
             switch (update) {
                 case CatalogUpdate.NewProduct p -> repository.insertIfAbsent(
@@ -51,6 +52,7 @@ public final class CatalogService {
                 case CatalogUpdate.StockChanged s -> change(s.sku(), item -> item.changeStock(s.quantity(), s.version()));
                 case CatalogUpdate.Withdrawn w -> change(w.sku(), item -> item.withdraw(w.version()));
             }
+            return true;
         });
     }
 
