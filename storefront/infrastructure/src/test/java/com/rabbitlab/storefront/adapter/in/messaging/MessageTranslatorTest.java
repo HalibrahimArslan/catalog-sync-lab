@@ -6,6 +6,7 @@ import com.rabbitlab.storefront.domain.Price;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.core.MessageBuilderSupport;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
@@ -113,7 +114,7 @@ class MessageTranslatorTest {
     }
 
     private static Message message(String type, Integer schemaVersion, String body) {
-        MessageBuilder builder = MessageBuilder.withBody(body.getBytes(UTF_8)).setType(type)
+        MessageBuilderSupport<Message> builder = MessageBuilder.withBody(body.getBytes(UTF_8)).setType(type)
                 .setContentType("application/json");
         if (schemaVersion != null) {
             builder.setHeader(BackofficeEvents.SCHEMA_VERSION_HEADER, schemaVersion);

@@ -1,5 +1,6 @@
 package com.rabbitlab.backoffice.adapter.out.outbox;
 
+import com.rabbitlab.contract.BackofficeEvents;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
@@ -14,6 +15,8 @@ import java.time.Duration;
  * @param cleanupEnabled    yayınlanmış satırların temizliği açık mı
  * @param cleanupInterval   iki temizlik turu arasındaki bekleme
  * @param retention         yayınlanmış satır silinmeden önce ne kadar tutulsun (hata ayıklamak için)
+ * @param schemaVersion     outbox'a yazılan mesajların sözleşme sürümü (P4-M3). Varsayılan 1: Storefront iki
+ *                          sürümü okuyana kadar Backoffice eskiyi yayınlar; geçiş bu ayarı 2 yapmaktır
  */
 @ConfigurationProperties("backoffice.outbox")
 public record OutboxProperties(
@@ -24,5 +27,13 @@ public record OutboxProperties(
         @DefaultValue("5s") Duration confirmTimeout,
         @DefaultValue("true") boolean cleanupEnabled,
         @DefaultValue("1h") Duration cleanupInterval,
-        @DefaultValue("7d") Duration retention) {
+        @DefaultValue("7d") Duration retention,
+        @DefaultValue("1") int schemaVersion) {
+
+    public OutboxProperties {
+        // Uygulama açılırken patlasın; ilk ürün kaydedilirken, kullanıcının isteğinde değil.
+        if (!BackofficeEvents.isSupported(schemaVersion)) {
+            throw new IllegalArgumentException("Desteklenmeyen sözleşme sürümü: " + schemaVersion);
+        }
+    }
 }

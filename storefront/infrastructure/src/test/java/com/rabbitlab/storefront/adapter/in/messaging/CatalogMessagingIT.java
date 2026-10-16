@@ -15,6 +15,7 @@ import com.rabbitlab.storefront.domain.Sku;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.core.MessageBuilderSupport;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -216,7 +217,7 @@ class CatalogMessagingIT {
 
     /** {@code schemaVersion} null ise başlık konmaz (P4-M3 öncesi mesajlar gibi). */
     private void publish(BackofficeMessage message, String messageId, Integer schemaVersion) {
-        MessageBuilder builder = MessageBuilder
+        MessageBuilderSupport<Message> builder = MessageBuilder
                 .withBody(json.writeValueAsBytes(message))
                 .setContentType("application/json")
                 .setType(BackofficeEvents.typeOf(message))
