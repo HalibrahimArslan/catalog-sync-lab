@@ -35,7 +35,7 @@ import java.util.List;
  */
 final class SystemUnderTest {
 
-    private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17-alpine");
+    private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18-alpine");
     private static final RabbitMQContainer RABBIT = new RabbitMQContainer("rabbitmq:4.1-management");
 
     private static ConfigurableApplicationContext backoffice;
