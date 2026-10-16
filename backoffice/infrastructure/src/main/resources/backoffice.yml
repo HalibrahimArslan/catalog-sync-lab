@@ -1,0 +1,34 @@
+# Backoffice ayarları. Dosya adı application.yml DEĞİL: kabul testlerinde iki uygulama aynı
+# classpath'i paylaşıyor; iki application.yml çakışırdı. main() spring.config.name=backoffice ile bu dosyayı seçer.
+spring:
+  application:
+    name: backoffice
+  flyway:
+    locations: classpath:db/backoffice/migration   # aynı sebeple: migration klasörleri de ayrı
+  datasource:
+    url: jdbc:postgresql://localhost:5432/backoffice
+    username: rabbitlab
+    password: rabbitlab
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: rabbitlab
+    password: rabbitlab
+    # Faz 1 M4'ün Spring karşılıkları:
+    publisher-confirm-type: correlated   # broker her mesaj için ack/nack gönderir
+    publisher-returns: true              # yönlendirilemeyen mesaj geri döner...
+    template:
+      mandatory: true                    # ...ve sessizce kaybolmaz
+
+backoffice:
+  outbox:
+    scheduling-enabled: true
+    poll-interval: 500ms
+    batch-size: 100
+    confirm-timeout: 5s
+    cleanup-enabled: true
+    cleanup-interval: 1h
+    retention: 7d       # yayınlanmış satır bu süreden sonra silinir
+
+server:
+  port: 8081

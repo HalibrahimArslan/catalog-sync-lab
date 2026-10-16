@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.rabbitlab</groupId>
+        <artifactId>backoffice</artifactId>
+        <version>0.3.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>backoffice-application</artifactId>
+    <name>rabbit-lab :: backoffice :: application</name>
+    <description>Application servisleri halkası: use case akışları. Domain servislerini ve modeli bilir; framework'süz.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.rabbitlab</groupId>
+            <artifactId>backoffice-domain-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.rabbitlab</groupId>
+            <artifactId>backoffice-domain-service</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

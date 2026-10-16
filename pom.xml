@@ -14,13 +14,14 @@
 
     <groupId>com.rabbitlab</groupId>
     <artifactId>rabbit-lab</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>rabbit-lab :: phase 2 hexagonal</name>
+    <name>rabbit-lab :: phase 3 onion</name>
 
     <!--
-        Her bounded context ayrı bir modül (ayrı uygulama). Birbirlerinin sınıflarını göremezler;
-        tek ortak noktaları mesaj sözleşmesi (contract).
+        Her bounded context ayrı bir uygulama; birbirlerinin sınıflarını göremezler, tek ortak noktaları
+        mesaj sözleşmesi (contract). Faz 3: her context de kendi içinde Onion halkalarına bölünmüş
+        (model → domain-service → application → infrastructure); her halka ayrı Maven modülü.
     -->
     <modules>
         <module>contract</module>
@@ -45,12 +46,54 @@
             </dependency>
             <dependency>
                 <groupId>com.rabbitlab</groupId>
-                <artifactId>backoffice</artifactId>
+                <artifactId>backoffice-model</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.rabbitlab</groupId>
-                <artifactId>storefront</artifactId>
+                <artifactId>backoffice-domain-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitlab</groupId>
+                <artifactId>backoffice-domain-service</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitlab</groupId>
+                <artifactId>backoffice-application</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitlab</groupId>
+                <artifactId>backoffice-infrastructure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitlab</groupId>
+                <artifactId>storefront-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitlab</groupId>
+                <artifactId>storefront-domain-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitlab</groupId>
+                <artifactId>storefront-domain-service</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitlab</groupId>
+                <artifactId>storefront-application</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitlab</groupId>
+                <artifactId>storefront-infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
