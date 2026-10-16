@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
@@ -23,6 +25,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /** Mesaj takibinin Backoffice tarafı: outbox'taki mesajlar ve durumları. Kimlik doğrulama yok (kapsam dışı). */
+@Import(AdminSecurityConfiguration.class)
+@WithMockUser(roles = "ADMIN")
 @WebMvcTest(OutboxAdminController.class)
 class OutboxAdminControllerTest {
 

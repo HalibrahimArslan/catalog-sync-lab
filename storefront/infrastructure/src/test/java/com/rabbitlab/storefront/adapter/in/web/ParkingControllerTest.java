@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
@@ -25,6 +27,8 @@ import static org.mockito.Mockito.when;
  * P4-M2 — Park kuyruğunun yönetim uç noktaları. Kimlik doğrulama yok (bilinçli kapsam dışı); gerçek
  * sistemde bu uç noktalar ayrı bir port ya da yetki arkasında olurdu.
  */
+@Import(AdminSecurityConfiguration.class)
+@WithMockUser(roles = "ADMIN")
 @WebMvcTest(ParkingController.class)
 class ParkingControllerTest {
 
