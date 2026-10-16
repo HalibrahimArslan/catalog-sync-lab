@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>backoffice-model</artifactId>
-    <name>rabbit-lab :: backoffice :: model</name>
+    <name>catalog-sync-lab :: backoffice :: model</name>
     <description>
         En iç halka: domain modeli (aggregate'ler, value object'ler, domain event'leri).
         Hiçbir bağımlılığı yok; Spring'i, veritabanını, RabbitMQ'yu derleme zamanında bile göremez.

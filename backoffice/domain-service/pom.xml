@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>backoffice-domain-service</artifactId>
-    <name>rabbit-lab :: backoffice :: domain-service</name>
+    <name>catalog-sync-lab :: backoffice :: domain-service</name>
     <description>
         İkinci halka: domain servisleri ve repository arayüzleri. Tek bir aggregate'in cevaplayamadığı
         kurallar (SKU benzersizliği, ürünle birlikte stok açmak) ve "aggregate'ler kalıcıdır" sözleşmesi.

@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>backoffice-application</artifactId>
-    <name>rabbit-lab :: backoffice :: application</name>
+    <name>catalog-sync-lab :: backoffice :: application</name>
     <description>Application servisleri halkası: use case akışları. Domain servislerini ve modeli bilir; framework'süz.</description>
 
     <dependencies>

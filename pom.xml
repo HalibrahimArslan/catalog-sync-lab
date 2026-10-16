@@ -13,10 +13,10 @@
     </parent>
 
     <groupId>com.rabbitlab</groupId>
-    <artifactId>rabbit-lab</artifactId>
+    <artifactId>catalog-sync-lab</artifactId>
     <version>0.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>rabbit-lab :: phase 4 operations</name>
+    <name>catalog-sync-lab</name>
 
     <!--
         Her bounded context ayrı bir uygulama; birbirlerinin sınıflarını göremezler, tek ortak noktaları

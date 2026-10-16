@@ -1,0 +1,32 @@
+# Her push ve PR'da tüm testler: birim, entegrasyon (Testcontainers ile gerçek PostgreSQL ve RabbitMQ)
+# ve Cucumber kabul senaryoları. GitHub'ın Ubuntu sunucularında Docker hazır; ek ayar gerekmez.
+name: build
+
+on:
+  push:
+    branches: [main, 'phase-*']
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: ./mvnw verify
+        run: ./mvnw -B -ntp verify
+
+      - name: Kabul testi raporu
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-report
+          path: acceptance/target/cucumber-report.html
+          if-no-files-found: ignore

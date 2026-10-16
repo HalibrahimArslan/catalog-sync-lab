@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>storefront-domain-service</artifactId>
-    <name>rabbit-lab :: storefront :: domain-service</name>
+    <name>catalog-sync-lab :: storefront :: domain-service</name>
     <description>
         İkinci halka: repository arayüzleri ve sözleşmelerine ait hatalar. Storefront'ta birden fazla
         aggregate'e yayılan kural yok; bu halka burada ince, ve bu da bir bilgi.

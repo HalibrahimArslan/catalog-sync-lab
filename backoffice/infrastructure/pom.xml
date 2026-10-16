@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>backoffice-infrastructure</artifactId>
-    <name>rabbit-lab :: backoffice :: infrastructure</name>
+    <name>catalog-sync-lab :: backoffice :: infrastructure</name>
     <description>
         En dış halka: web, veritabanı, RabbitMQ ve Spring Boot başlangıcı. İçteki tüm halkaları bilir;
         içteki halkalar onu bilmez.

@@ -6,12 +6,12 @@
 
     <parent>
         <groupId>com.rabbitlab</groupId>
-        <artifactId>rabbit-lab</artifactId>
+        <artifactId>catalog-sync-lab</artifactId>
         <version>0.4.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>contract</artifactId>
-    <name>rabbit-lab :: contract</name>
+    <name>catalog-sync-lab :: contract</name>
     <description>Backoffice ile Storefront arasındaki mesaj sözleşmesi. Bağımlılığı yok, Spring bilmez.</description>
 
     <dependencies>

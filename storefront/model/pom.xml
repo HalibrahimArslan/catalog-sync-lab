@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>storefront-model</artifactId>
-    <name>rabbit-lab :: storefront :: model</name>
+    <name>catalog-sync-lab :: storefront :: model</name>
     <description>
         En iç halka: domain modeli (aggregate'ler, value object'ler, domain event'leri).
         Hiçbir bağımlılığı yok; Spring'i, veritabanını, RabbitMQ'yu derleme zamanında bile göremez.

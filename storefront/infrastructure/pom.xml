@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>storefront-infrastructure</artifactId>
-    <name>rabbit-lab :: storefront :: infrastructure</name>
+    <name>catalog-sync-lab :: storefront :: infrastructure</name>
     <description>
         En dış halka: web, veritabanı, RabbitMQ ve Spring Boot başlangıcı. İçteki tüm halkaları bilir;
         içteki halkalar onu bilmez.

@@ -1,5 +1,7 @@
 # catalog-sync-lab
 
+[![build](https://github.com/HalibrahimArslan/catalog-sync-lab/actions/workflows/build.yml/badge.svg)](https://github.com/HalibrahimArslan/catalog-sync-lab/actions/workflows/build.yml)
+
 Backoffice → E-ticaret (Storefront) ürün ve stok senkronizasyonu üzerinden
 RabbitMQ, DDD, Hexagonal ve Onion mimarisini TDD ile öğrenme projesi.
 
@@ -45,6 +47,8 @@ docker compose up -d
 ./mvnw verify
 # Kabul testi raporu: acceptance/target/cucumber-report.html
 ```
+GitHub Actions her push ve PR'da aynı komutu çalıştırır (`.github/workflows/build.yml`); kabul testi raporu
+çalıştırmanın artifact'i olarak indirilebilir.
 
 ## Uygulamaları çalıştırmak
 ```bash

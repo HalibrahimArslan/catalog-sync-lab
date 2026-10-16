@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>storefront-application</artifactId>
-    <name>rabbit-lab :: storefront :: application</name>
+    <name>catalog-sync-lab :: storefront :: application</name>
     <description>Application servisleri halkası: use case akışları. Domain servislerini ve modeli bilir; framework'süz.</description>
 
     <dependencies>
