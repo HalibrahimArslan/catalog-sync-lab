@@ -12,8 +12,12 @@ import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Test edilen sistemin tamamı: bir PostgreSQL (iki veritabanı), bir RabbitMQ, iki uygulama.
@@ -26,7 +30,8 @@ import java.sql.Statement;
  *
  * İki uygulama aynı JVM'de ama ayrı Spring context'lerinde; birbirlerinin bean'lerini görmezler.
  * Konteynerler ve uygulamalar JVM başına bir kez açılır, senaryolar arasında paylaşılır (her senaryo
- * kendi SKU'sunu kullanır). Storefront, US5-1 için senaryo içinde kapatılıp açılabilir.
+ * kendi SKU'sunu kullanır). Storefront, US5-1 için senaryo içinde kapatılıp açılabilir; Backoffice, US7 için
+ * başka bir sözleşme sürümüyle yeniden başlatılabilir.
  */
 final class SystemUnderTest {
 
@@ -35,6 +40,7 @@ final class SystemUnderTest {
 
     private static ConfigurableApplicationContext backoffice;
     private static ConfigurableApplicationContext storefront;
+    private static int schemaVersion = 1;
     private static RabbitTemplate rabbit;
     private static RabbitAdmin rabbitAdmin;
 
@@ -50,7 +56,7 @@ final class SystemUnderTest {
         createDatabase("backoffice");
         createDatabase("storefront");
 
-        backoffice = run(BackofficeApplication.class, "backoffice", "--backoffice.outbox.poll-interval=100ms");
+        backoffice = runBackoffice(schemaVersion);
         startStorefront();
 
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory(RABBIT.getHost(), RABBIT.getAmqpPort());
@@ -79,6 +85,38 @@ final class SystemUnderTest {
         }
     }
 
+    /**
+     * Backoffice'i verilen sözleşme sürümüyle yayınlayacak şekilde yeniden başlatır (gerçekte: ayarı değiştirip
+     * yeniden deploy etmek). Outbox'ta bekleyen satırlar yazıldıkları sürümle gider.
+     */
+    static synchronized void publishSchemaVersion(int version) {
+        if (version == schemaVersion) {
+            return;
+        }
+        backoffice.close();
+        backoffice = runBackoffice(version);
+        schemaVersion = version;
+    }
+
+    /** Backoffice'in bu SKU için outbox'a yazdığı ve yayınladığı mesajların sürümleri, yazılış sırasıyla. */
+    static List<Integer> publishedSchemaVersions(String sku) {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl("backoffice"), POSTGRES.getUsername(),
+                POSTGRES.getPassword());
+             PreparedStatement statement = connection.prepareStatement(
+                     "select schema_version from outbox where sku = ? and published_at is not null order by id")) {
+            statement.setString(1, sku);
+            List<Integer> versions = new ArrayList<>();
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    versions.add(rows.getInt(1));
+                }
+            }
+            return versions;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Outbox okunamadı", e);
+        }
+    }
+
     static String backofficeUrl() {
         return "http://localhost:" + backoffice.getEnvironment().getProperty("local.server.port");
     }
@@ -94,6 +132,11 @@ final class SystemUnderTest {
 
     static RabbitAdmin rabbitAdmin() {
         return rabbitAdmin;
+    }
+
+    private static ConfigurableApplicationContext runBackoffice(int schemaVersion) {
+        return run(BackofficeApplication.class, "backoffice", "--backoffice.outbox.poll-interval=100ms",
+                "--backoffice.outbox.schema-version=" + schemaVersion);
     }
 
     /**
