@@ -5,6 +5,7 @@ import { MessagesView } from './components/MessagesView'
 import { QueuesView } from './components/QueuesView'
 import { ScenariosView } from './components/ScenariosView'
 import { usePolling, useScenarioRunner } from './hooks'
+import { ThemeSwitch } from './theme/ThemeSwitch'
 
 const TABS = { scenarios: 'Senaryolar', messages: 'Mesajlar', manual: 'Elle dene', queues: 'Kuyruklar ve park' } as const
 type Tab = keyof typeof TABS
@@ -17,20 +18,28 @@ export default function App() {
   return (
     <>
       <header className="top">
-        <div>
-          <h1>Senaryo Konsolu</h1>
-          <p className="muted">Backoffice → RabbitMQ → Storefront kabul senaryoları, çalışan sisteme karşı</p>
+        <div className="top-inner">
+          <div className="brand">
+            <span className="logo" aria-hidden="true">✓</span>
+            <div>
+              <h1>Senaryo Konsolu</h1>
+              <p className="muted">Backoffice → RabbitMQ → Storefront, çalışan sisteme karşı</p>
+            </div>
+          </div>
+          <div className="top-right">
+            <Health />
+            <ThemeSwitch />
+          </div>
         </div>
-        <Health />
+        <nav className="tabs" role="tablist">
+          {(Object.keys(TABS) as Tab[]).map((key) => (
+            <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''}
+              onClick={() => setTab(key)}>
+              {TABS[key]}
+            </button>
+          ))}
+        </nav>
       </header>
-      <nav className="tabs" role="tablist">
-        {(Object.keys(TABS) as Tab[]).map((key) => (
-          <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''}
-            onClick={() => setTab(key)}>
-            {TABS[key]}
-          </button>
-        ))}
-      </nav>
       <main>
         {tab === 'scenarios' && <ScenariosView runner={runner} />}
         {tab === 'messages' && <MessagesView />}
