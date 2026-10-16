@@ -80,3 +80,6 @@ export interface DeliveryEntry {
   queue: string
   at: string
 }
+
+/** OpenAPI dokümanı; API sekmesi yalnızca {@code servers}'ı değiştirir, gerisini olduğu gibi Swagger UI'a verir. */
+export type OpenApiDoc = { servers?: { url: string; description?: string }[] } & Record<string, unknown>
