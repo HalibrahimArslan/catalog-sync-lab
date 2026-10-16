@@ -17,7 +17,7 @@ export class FakeSystem {
     version: number; stockVersion: number }>()
   private catalog = new Map<string, CatalogView & { version: number; stockVersion: number }>()
   private queues: Record<string, RawMessage[]> = { 'storefront.catalog': [], 'storefront.stock': [] }
-  private parking: Record<string, ParkedMessage[]> = { 'storefront.catalog': [], 'storefront.stock': [] }
+  private parking: Record<string, (ParkedMessage & { schemaVersion?: number })[]> = { 'storefront.catalog': [], 'storefront.stock': [] }
   private taps: TappedMessage[][] = []
   private nextId = 1
 
