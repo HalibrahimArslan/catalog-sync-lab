@@ -1,0 +1,57 @@
+import { useState } from 'react'
+import { backoffice, httpDriver, rabbitmq, storefront } from './api/http-driver'
+import { ManualView } from './components/ManualView'
+import { QueuesView } from './components/QueuesView'
+import { ScenariosView } from './components/ScenariosView'
+import { usePolling, useScenarioRunner } from './hooks'
+
+const TABS = { scenarios: 'Senaryolar', manual: 'Elle dene', queues: 'Kuyruklar ve park' } as const
+type Tab = keyof typeof TABS
+
+export default function App() {
+  const [tab, setTab] = useState<Tab>('scenarios')
+  // Sekme değişince çalışan senaryolar durmasın: runner App seviyesinde.
+  const runner = useScenarioRunner(httpDriver)
+
+  return (
+    <>
+      <header className="top">
+        <div>
+          <h1>Senaryo Konsolu</h1>
+          <p className="muted">Backoffice → RabbitMQ → Storefront kabul senaryoları, çalışan sisteme karşı</p>
+        </div>
+        <Health />
+      </header>
+      <nav className="tabs" role="tablist">
+        {(Object.keys(TABS) as Tab[]).map((key) => (
+          <button key={key} role="tab" aria-selected={tab === key} className={tab === key ? 'active' : ''}
+            onClick={() => setTab(key)}>
+            {TABS[key]}
+          </button>
+        ))}
+      </nav>
+      <main>
+        {tab === 'scenarios' && <ScenariosView runner={runner} />}
+        {tab === 'manual' && <ManualView />}
+        {tab === 'queues' && <QueuesView />}
+      </main>
+    </>
+  )
+}
+
+function Health() {
+  const health = usePolling(async () => ({
+    Backoffice: await backoffice.isUp(),
+    Storefront: await storefront.isUp(),
+    RabbitMQ: await rabbitmq.isUp(),
+  }), 3_000)
+  return (
+    <ul className="health" aria-label="Servisler">
+      {Object.entries(health.data ?? {}).map(([name, up]) => (
+        <li key={name} className={up ? 'up' : 'down'} title={up ? 'ayakta' : 'cevap vermiyor'}>
+          <span className="dot" /> {name}
+        </li>
+      ))}
+    </ul>
+  )
+}
