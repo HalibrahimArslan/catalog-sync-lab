@@ -23,6 +23,7 @@ npm run dev        # http://localhost:5173
 | Sekme | Ne yapar |
 |---|---|
 | **Senaryolar** | 13 senaryo, hikâyelere göre gruplu. Her adım ✓ geçti / ✗ kaldı (sebebiyle) / ✋ seni bekliyor. "Elle adımı olmayanları çalıştır" kesinti gerektirmeyen 10 senaryoyu sırayla koşar |
+| **Mesajlar** | Mesaj takibi (Celery'deki Flower gibi): her mesajın durumu (yayın bekliyor / yayınlanamıyor / yolda / işlendi / tekrar denenecek / park edildi / yeniden oynatıldı), deneme sayısı ve hatası. SKU ya da message-id ile ara, duruma göre süz; bir mesaja tıklayınca Backoffice'ten vitrine yolculuğu (her deneme, saati ve hatasıyla), gövdesi ve park edildiyse "Yeniden oynat" |
 | **Elle dene** | Backoffice'e komut gönder (oluştur, güncelle, stok, satıştan kaldır); vitrinin ne zaman güncellendiğini yan tarafta izle |
 | **Kuyruklar ve park** | Kuyruk derinlikleri; park kuyruklarındaki mesajlar, sebepleri ve deneme sayıları; tek tek ya da toplu yeniden oynatma |
 
@@ -32,6 +33,18 @@ konsol, adımın gerçekten yapıldığını kontrol eder (ör. vitrin gerçekte
 
 US7'de mesajların hangi sürümle gittiğini görmek için konsol RabbitMQ'da geçici bir kuyruk
 (`ui.tap.*`) açar ve exchange'e bağlar; senaryo bitince siler (unutulursa RabbitMQ 10 dakikada kendisi siler).
+
+## Mesaj takibi nereden besleniyor?
+Mesajın kimliği Backoffice outbox'ında üretilen `message_id`; RabbitMQ'da ve Storefront'ta da aynı.
+
+| Kaynak | Uç nokta | Ne söyler |
+|---|---|---|
+| Backoffice outbox | `GET /admin/outbox?sku=&messageId=&state=PENDING\|FAILING\|PUBLISHED`, `/admin/outbox/stats` | Yazıldı mı, yayınlandı mı, yayınlanamıyorsa neden (`last_error`) |
+| Storefront teslimat geçmişi (`message_attempt`) | `GET /admin/messages?sku=&messageId=&state=`, `/admin/messages/{id}`, `/admin/messages/stats` | Her deneme: işlendi / tekrar geldi / tekrar denenecek / park edildi / yeniden oynatıldı, hatasıyla |
+
+RabbitMQ işlenen mesajı unutur ve tekrar denenen mesajın neden başarısız olduğunu hiçbir yere yazmaz;
+teslimat geçmişi bu yüzden var (Celery'nin result backend'i gibi). Inbox ile aynı saklama süresinden
+(`storefront.inbox.retention`, varsayılan 7 gün) sonra silinir.
 
 ## Nasıl bağlanıyor?
 Tarayıcı üç servise Vite'ın proxy'si üzerinden ulaşır (`vite.config.ts`); aynı origin olduğu için

@@ -54,6 +54,15 @@ describe('combine', () => {
     expect(new Set(messages.map((m) => m.key)).size).toBe(2)
   })
 
+  it('zamanları metin olarak değil tarih olarak karşılaştırır (kesirli saniye)', () => {
+    const messages = combine(
+      [outbox({ messageId: 'a', createdAt: '2026-10-16T10:00:00.900Z' })],
+      [delivery({ messageId: 'b', lastSeen: '2026-10-16T10:00:00Z' })],
+    )
+
+    expect(messages.map((m) => m.messageId)).toEqual(['a', 'b'])
+  })
+
   it('en son değişen mesaj önce gelir', () => {
     const messages = combine(
       [outbox({ messageId: 'eski', createdAt: '2026-10-16T09:00:00Z' })],
