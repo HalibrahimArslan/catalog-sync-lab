@@ -6,6 +6,8 @@ import { loadMessages } from '../tracking/load'
 import {
   parseSearch, STATE_LABEL, STATE_TONE, timeline, type TrackedMessage, type TrackedState,
 } from '../tracking/tracking'
+import { cx, input, table, TONE_BAR } from './styles'
+import { Badge, Button, Card, Eyebrow, Notice } from './ui'
 
 /**
  * Mesaj takibi (Celery'deki Flower'ın görevler sayfası gibi): her mesajın şu an nerede olduğu, kaç kez
@@ -25,40 +27,50 @@ export function MessagesView() {
     <section>
       <Stats onPick={(s) => { setState(s); setSelected(undefined) }} active={state} />
 
-      <div className="toolbar">
-        <input className="search" placeholder="SKU ya da message-id ara" value={search}
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <input className={cx(input, 'w-full max-w-[340px]')} placeholder="SKU ya da message-id ara" value={search}
           onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void list.refresh()} />
-        <select value={state} onChange={(e) => setState(e.target.value as TrackedState | 'all')} aria-label="Durum">
+        <select className={input} value={state} onChange={(e) => setState(e.target.value as TrackedState | 'all')} aria-label="Durum">
           <option value="all">Tüm durumlar</option>
           {(Object.keys(STATE_LABEL) as TrackedState[]).map((s) => <option key={s} value={s}>{STATE_LABEL[s]}</option>)}
         </select>
-        <label className="check"><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> 3 sn'de bir yenile</label>
-        <button onClick={() => void list.refresh()}>Yenile</button>
+        <label className="flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" className="accent-accent" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> 3 sn'de bir yenile
+        </label>
+        <Button onClick={() => void list.refresh()}>Yenile</Button>
       </div>
-      {list.error && <p className="bad">{list.error}</p>}
-      {list.data?.warnings.map((w) => <p key={w} className="notice">Eksik olabilir: {w}</p>)}
+      <div className="mt-3 grid gap-2 empty:hidden">
+        {list.error && <p className="text-bad">{list.error}</p>}
+        {list.data?.warnings.map((w) => <Notice key={w}>Eksik olabilir: {w}</Notice>)}
+      </div>
 
-      <div className="split">
-        <div className="scroll-x">
-          <table className="messages">
-            <thead><tr><th>Zaman</th><th>Durum</th><th>Tip</th><th>SKU</th><th className="num">Deneme</th><th>Hata</th></tr></thead>
+      <div className="mt-3.5 grid items-start gap-4 min-[980px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className={table.wrap}>
+          <table className={table.table}>
+            <thead>
+              <tr>
+                <th className={table.th}>Zaman</th><th className={table.th}>Durum</th><th className={table.th}>Tip</th>
+                <th className={table.th}>SKU</th><th className={cx(table.th, table.num)}>Deneme</th><th className={table.th}>Hata</th>
+              </tr>
+            </thead>
             <tbody>
-              {list.data && messages.length === 0 && <tr><td colSpan={6} className="muted">Bu filtreyle mesaj yok.</td></tr>}
+              {list.data && messages.length === 0 && <tr><td colSpan={6} className={cx(table.td, 'text-muted')}>Bu filtreyle mesaj yok.</td></tr>}
               {messages.map((m) => (
-                <tr key={m.key} className={`clickable ${m.key === selected ? 'selected' : ''}`} onClick={() => setSelected(m.key)}>
-                  <td className="nowrap">{formatTime(m.updatedAt)}</td>
-                  <td><StateBadge state={m.state} /></td>
-                  <td>{m.type ?? '—'}</td>
-                  <td><code>{m.sku ?? '—'}</code></td>
-                  <td className="num">{m.attempts}</td>
-                  <td className="error ellipsis" title={m.lastError ?? ''}>{m.lastError ?? ''}</td>
+                <tr key={m.key} onClick={() => setSelected(m.key)}
+                  className={cx('cursor-pointer', m.key === selected ? 'bg-accent-soft' : 'hover:bg-surface-2')}>
+                  <td className={cx(table.td, 'whitespace-nowrap')}>{formatTime(m.updatedAt)}</td>
+                  <td className={table.td}><StateBadge state={m.state} /></td>
+                  <td className={table.td}>{m.type ?? '—'}</td>
+                  <td className={table.td}><code className="whitespace-nowrap">{m.sku ?? '—'}</code></td>
+                  <td className={cx(table.td, table.num)}>{m.attempts}</td>
+                  <td className={cx(table.td, 'max-w-[180px] truncate text-[0.84rem] text-bad')} title={m.lastError ?? ''}>{m.lastError ?? ''}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         {current ? <Detail message={current} onChanged={() => void list.refresh()} />
-          : <div className="card muted detail-empty">Ayrıntısını görmek için bir mesaja tıkla.</div>}
+          : <Card className="px-4 py-10 text-center text-muted">Ayrıntısını görmek için bir mesaja tıkla.</Card>}
       </div>
     </section>
   )
@@ -68,23 +80,26 @@ function Stats({ active, onPick }: { active: TrackedState | 'all'; onPick: (stat
   const outbox = usePolling(backoffice.outboxStats, 3_000)
   const deliveries = usePolling(storefront.messageStats, 3_000)
   const tile = (state: TrackedState, count: number | undefined) => (
-    <button key={state} className={`stat tone-${STATE_TONE[state]} ${active === state ? 'active' : ''}`}
-      onClick={() => onPick(active === state ? 'all' : state)}>
-      <span className="value">{count ?? '–'}</span>
-      <span className="label">{STATE_LABEL[state]}</span>
+    <button key={state} onClick={() => onPick(active === state ? 'all' : state)}
+      className={cx('relative grid min-w-[124px] cursor-pointer justify-items-start gap-0.5 overflow-hidden rounded-xl border bg-surface',
+        'px-3.5 py-3 text-left shadow-card transition hover:bg-surface-2',
+        active === state ? 'border-accent ring-3 ring-accent/30' : 'border-line')}>
+      <span className={cx('absolute inset-y-0 left-0 w-[3px]', TONE_BAR[STATE_TONE[state]])} />
+      <span className="text-[1.6rem] leading-tight font-bold tracking-tight tabular-nums">{count ?? '–'}</span>
+      <span className="text-[0.78rem] text-muted">{STATE_LABEL[state]}</span>
     </button>
   )
   const o = (s: OutboxState) => outbox.data?.[s]
   const d = (s: DeliveryOutcome) => deliveries.data?.[s]
   return (
-    <div className="stats">
-      <div className="stat-group">
-        <h3>Backoffice outbox {outbox.error && <span className="bad">· cevap yok</span>}</h3>
-        <div className="stat-row">{tile('outbox-pending', o('PENDING'))}{tile('outbox-failing', o('FAILING'))}</div>
+    <div className="mt-6 flex flex-wrap gap-7">
+      <div>
+        <Eyebrow>Backoffice outbox {outbox.error && <span className="text-bad">· cevap yok</span>}</Eyebrow>
+        <div className="flex flex-wrap gap-2.5">{tile('outbox-pending', o('PENDING'))}{tile('outbox-failing', o('FAILING'))}</div>
       </div>
-      <div className="stat-group">
-        <h3>Storefront {deliveries.error && <span className="bad">· cevap yok</span>}</h3>
-        <div className="stat-row">
+      <div>
+        <Eyebrow>Storefront {deliveries.error && <span className="text-bad">· cevap yok</span>}</Eyebrow>
+        <div className="flex flex-wrap gap-2.5">
           {tile('processed', d('PROCESSED'))}{tile('retrying', d('RETRY'))}{tile('parked', d('PARKED'))}
           {tile('replayed', d('REPLAYED'))}{tile('duplicate', d('DUPLICATE'))}
         </div>
@@ -115,17 +130,17 @@ function Detail({ message, onChanged }: { message: TrackedMessage; onChanged: ()
   }
 
   return (
-    <article className="card detail">
-      <header>
+    <Card className="sticky top-[132px]">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3><StateBadge state={message.state} /> {message.type ?? 'Bilinmeyen tip'}</h3>
-          <p className="meta"><span>message-id <code>{id ?? 'yok (kimliksiz mesaj)'}</code></span></p>
+          <h3 className="flex items-center gap-2 font-semibold"><StateBadge state={message.state} /> {message.type ?? 'Bilinmeyen tip'}</h3>
+          <p className="mt-1.5 text-[0.84rem] text-muted">message-id <code>{id ?? 'yok (kimliksiz mesaj)'}</code></p>
         </div>
-        {canReplay && <button className="primary" onClick={() => void replay()}>Yeniden oynat</button>}
+        {canReplay && <Button variant="primary" onClick={() => void replay()}>Yeniden oynat</Button>}
       </header>
-      {notice && <p className="notice">{notice}</p>}
+      {notice && <div className="mt-3"><Notice>{notice}</Notice></div>}
 
-      <dl className="facts">
+      <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-[18px] gap-y-1.5 [&_dt]:text-muted">
         <dt>SKU</dt><dd><code>{message.sku ?? '—'}</code></dd>
         <dt>Kuyruk</dt><dd>{message.queue ? <code>{message.queue}</code> : '—'}</dd>
         <dt>Sözleşme</dt><dd>{entry ? `v${entry.schemaVersion}` : message.delivery?.schemaVersion ? `v${message.delivery.schemaVersion}` : '—'}</dd>
@@ -134,35 +149,41 @@ function Detail({ message, onChanged }: { message: TrackedMessage; onChanged: ()
 
       {message.lastError && (
         <>
-          <h4>Son hata</h4>
-          <pre className="error-box">{message.lastError}</pre>
+          <Eyebrow className="mt-5">Son hata</Eyebrow>
+          <pre className={cx(pre, 'bg-bad-soft text-bad')}>{message.lastError}</pre>
         </>
       )}
 
-      <h4>Yolculuk</h4>
-      <ol className="timeline">
+      <Eyebrow className="mt-5">Yolculuk</Eyebrow>
+      <ol>
         {events.map((event, i) => (
-          <li key={i} className={`tone-${event.tone}`}>
-            <span className="dot" />
+          <li key={i} className="relative grid grid-cols-[14px_1fr] gap-2.5 py-[7px]">
+            {i < events.length - 1 && <span className="absolute top-[22px] -bottom-1.5 left-[6px] w-0.5 bg-line" />}
+            <span className={cx('mt-[5px] size-3 rounded-full ring-3 ring-surface', TONE_BAR[event.tone])} />
             <div>
-              <div className="row-line"><strong>{event.title}</strong><time>{event.at ? formatTime(event.at, true) : ''}</time></div>
-              {event.detail && <div className="muted small">{event.detail}</div>}
-              {event.error && <div className="error small">{event.error}</div>}
+              <div className="flex justify-between gap-2">
+                <strong className="font-semibold">{event.title}</strong>
+                <time className="text-[0.8rem] whitespace-nowrap text-muted tabular-nums">{event.at ? formatTime(event.at, true) : ''}</time>
+              </div>
+              {event.detail && <div className="text-sm text-muted">{event.detail}</div>}
+              {event.error && <div className="text-sm text-bad">{event.error}</div>}
             </div>
           </li>
         ))}
-        {events.length === 0 && <li className="muted">Kayıt yok.</li>}
+        {events.length === 0 && <li className="text-muted">Kayıt yok.</li>}
       </ol>
 
-      <h4>Gövde</h4>
-      {entry ? <pre className="payload">{pretty(entry.payload)}</pre>
-        : <p className="muted small">Backoffice outbox'ında kaydı yok (saklama süresi dolup silinmiş ya da mesaj Backoffice dışından gelmiş).</p>}
-    </article>
+      <Eyebrow className="mt-5">Gövde</Eyebrow>
+      {entry ? <pre className={cx(pre, 'max-h-[280px] overflow-auto bg-code')}>{pretty(entry.payload)}</pre>
+        : <p className="text-sm text-muted">Backoffice outbox'ında kaydı yok (saklama süresi dolup silinmiş ya da mesaj Backoffice dışından gelmiş).</p>}
+    </Card>
   )
 }
 
+const pre = 'rounded-lg px-3.5 py-3 font-mono text-[0.82rem] whitespace-pre-wrap wrap-anywhere'
+
 function StateBadge({ state }: { state: TrackedState }) {
-  return <span className={`state tone-${STATE_TONE[state]}`}>{STATE_LABEL[state]}</span>
+  return <Badge tone={STATE_TONE[state]} dot>{STATE_LABEL[state]}</Badge>
 }
 
 function formatTime(iso: string, withSeconds = false) {
