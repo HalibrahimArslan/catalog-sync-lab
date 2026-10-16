@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
  * P2-M6 — REST inbound adapter. Sadece HTTP ↔ application servisi çevirisini test ediyoruz; servisler sahte (Mockito).
  * Controller iş kuralı içermez: JSON'u komuta çevirir, domain hatasını HTTP koduna çevirir.
  */
+@Import(AdminSecurityConfiguration.class)
 @WebMvcTest(ProductController.class)
 class ProductControllerTest {
 

@@ -23,13 +23,14 @@ Faz 1–3 mimariyle uğraştı; Faz 4 sistemi **çalıştıran** kişinin sorunl
 
 ## Yönetim uç noktaları (Storefront, port 8082)
 ```bash
-curl localhost:8082/admin/parking                                       # ["storefront.catalog","storefront.stock"]
-curl 'localhost:8082/admin/parking/storefront.stock?limit=20'           # park edilenler: messageId, type, error, attempts, body
-curl -X POST localhost:8082/admin/parking/storefront.stock/<messageId>/replay   # 204; yoksa 404
-curl -X POST localhost:8082/admin/parking/storefront.stock/replay       # {"replayed": n}
+curl -u admin:admin localhost:8082/admin/parking                        # ["storefront.catalog","storefront.stock"]
+curl -u admin:admin 'localhost:8082/admin/parking/storefront.stock?limit=20'  # park edilenler: messageId, type, error, attempts, body
+curl -u admin:admin -X POST localhost:8082/admin/parking/storefront.stock/<messageId>/replay  # 204; yoksa 404
+curl -u admin:admin -X POST localhost:8082/admin/parking/storefront.stock/replay  # {"replayed": n}
 ```
-Kimlik doğrulama yok (bilinçli kapsam dışı). Gerçek sistemde bu uç noktaları herkes çağırabilseydi mesaj
-içeriklerini okuyabilir ve işlemeyi tetikleyebilirdi.
+Faz 4'te kimlik doğrulama yoktu (bilinçli kapsam dışı): herkes mesaj içeriklerini okuyup işlemeyi
+tetikleyebiliyordu. Faz 4'ten sonra `/admin/**` HTTP Basic ile yöneticiye kapatıldı (`AdminSecurityConfiguration`;
+`ADMIN_USER` / `ADMIN_PASSWORD`, yerelde varsayılan `admin` / `admin`).
 
 ## Sözleşme sürümü: kırıcı değişikliğin güvenli sırası
 ```
@@ -83,8 +84,8 @@ böyle birbirini tamamlıyor.
 ## Bilinçli bırakılan "acıtan noktalar"
 İncelerken fark et, listeye kendi bulduklarını ekle:
 
-1. **Yönetim uç noktalarında kimlik doğrulama yok.** Herkes park edilen mesajların içeriğini okuyabilir,
-   yeniden oynatabilir. En azından ayrı bir port (`management.server.port` gibi) ve yetki gerekir.
+1. ~~**Yönetim uç noktalarında kimlik doğrulama yok.**~~ Faz 4'ten sonra çözüldü: `/admin/**` HTTP Basic ile
+   yöneticiye kapalı. Kalan: tek kullanıcı ve tek rol (okuma ile yeniden oynatma ayrılmadı), ayrı yönetim portu yok.
 2. **v1 emekliye ayrılmadı.** Güvenli sıranın üçüncü adımı yapılmadı: Storefront hâlâ v1 okuyor. v1 kodunu
    silmek için kuyruklarda, park kuyruğunda ve outbox'ta v1 mesaj kalmadığından emin olmak gerekir; bunu
    ölçen bir şey yok. Outbox sütununun varsayılanı da hâlâ 1.

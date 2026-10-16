@@ -56,6 +56,10 @@ CORS ayarı gerekmez, RabbitMQ kimlik bilgisi tarayıcıya gitmez.
 | `/svc/storefront` | `http://localhost:8082` | `STOREFRONT_URL` |
 | `/svc/rabbitmq` | `http://localhost:15672/api` | `RABBITMQ_URL`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD` |
 
+Backoffice ve Storefront'un yönetim uç noktaları (`/admin/**`) HTTP Basic ister. Proxy, uygulamalarla
+aynı `ADMIN_USER` / `ADMIN_PASSWORD` ortam değişkenlerini kullanır (yerelde varsayılan `admin` / `admin`);
+uygulamaları başka bir şifreyle başlattıysan `npm run dev`'i de aynı değişkenlerle başlat.
+
 ## Kod
 ```
 src/scenarios/engine.ts      senaryo motoru: adımlar sırayla, eventually(), elle adım onayı, iptal

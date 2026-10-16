@@ -17,8 +17,9 @@ import java.util.Map;
  * Park kuyruğunun yönetim uç noktaları (P4-M2). Sorunu düzelten insan (ör. eksik ürünü Backoffice'te
  * oluşturan) park edilen mesajı görür ve ana kuyruğa geri gönderir.
  *
- * <p>Kimlik doğrulama yok (Faz 4'te bilinçli kapsam dışı). Gerçek sistemde bu uç noktalar ayrı bir
- * yönetim portunda ya da yetki arkasında olmalı: herkes mesajları okuyup tekrar işletebilir.
+ * <p>Yalnızca yöneticiye açık (HTTP Basic, {@link AdminSecurityConfiguration}); kullanıcı adı ve şifre
+ * {@code ADMIN_USER} / {@code ADMIN_PASSWORD} ayarından. Faz 4'te korumasızdı: herkes mesajları
+ * okuyup tekrar işletebiliyordu.
  *
  * <pre>
  *   GET  /admin/parking                          park kuyruğu olan kuyruklar

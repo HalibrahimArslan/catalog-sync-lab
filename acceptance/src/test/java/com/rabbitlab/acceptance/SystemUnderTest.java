@@ -38,6 +38,10 @@ final class SystemUnderTest {
     private static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18-alpine");
     private static final RabbitMQContainer RABBIT = new RabbitMQContainer("rabbitmq:4.1-management");
 
+    /** Yönetim uç noktalarının kimlik bilgisi; açıkça veriliyor ki makinedeki ADMIN_PASSWORD testleri etkilemesin. */
+    static final String ADMIN_USER = "acceptance";
+    static final String ADMIN_PASSWORD = "acceptance-secret";
+
     private static ConfigurableApplicationContext backoffice;
     private static ConfigurableApplicationContext storefront;
     private static int schemaVersion = 1;
@@ -74,7 +78,8 @@ final class SystemUnderTest {
 
     static synchronized void startStorefront() {
         if (storefront == null) {
-            storefront = run(StorefrontApplication.class, "storefront", "--storefront.messaging.retry-delay=300ms");
+            storefront = run(StorefrontApplication.class, "storefront", "--storefront.messaging.retry-delay=300ms",
+                    "--storefront.admin.username=" + ADMIN_USER, "--storefront.admin.password=" + ADMIN_PASSWORD);
         }
     }
 
@@ -136,7 +141,8 @@ final class SystemUnderTest {
 
     private static ConfigurableApplicationContext runBackoffice(int schemaVersion) {
         return run(BackofficeApplication.class, "backoffice", "--backoffice.outbox.poll-interval=100ms",
-                "--backoffice.outbox.schema-version=" + schemaVersion);
+                "--backoffice.outbox.schema-version=" + schemaVersion,
+                "--backoffice.admin.username=" + ADMIN_USER, "--backoffice.admin.password=" + ADMIN_PASSWORD);
     }
 
     /**

@@ -13,9 +13,12 @@ export default defineConfig(({ mode }) => {
     changeOrigin: true,
     rewrite: (path) => rewriteTo + path.slice(prefix.length),
   })
+  // Yönetim uç noktaları (/admin/**) HTTP Basic ister; proxy ekler, şifre tarayıcıya gitmez.
+  // Açık uç noktalar (/products, /catalog) başlığı görmezden gelir.
+  const admin = `${env.ADMIN_USER ?? 'admin'}:${env.ADMIN_PASSWORD ?? 'admin'}`
   const proxy: Record<string, ProxyOptions> = {
-    '/svc/backoffice': service(env.BACKOFFICE_URL ?? 'http://localhost:8081', '/svc/backoffice'),
-    '/svc/storefront': service(env.STOREFRONT_URL ?? 'http://localhost:8082', '/svc/storefront'),
+    '/svc/backoffice': { ...service(env.BACKOFFICE_URL ?? 'http://localhost:8081', '/svc/backoffice'), auth: admin },
+    '/svc/storefront': { ...service(env.STOREFRONT_URL ?? 'http://localhost:8082', '/svc/storefront'), auth: admin },
     // RabbitMQ yönetim API'si: kimlik bilgisi tarayıcıya hiç gitmez, proxy ekler.
     '/svc/rabbitmq': {
       ...service(env.RABBITMQ_URL ?? 'http://localhost:15672', '/svc/rabbitmq', '/api'),
