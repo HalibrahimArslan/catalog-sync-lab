@@ -126,6 +126,24 @@ describe('eventually', () => {
     expect(calls).toBe(3)
   })
 
+  it('iptal sinyali gelince beklemeyi bırakır; senaryo cancelled olur', async () => {
+    const controller = new AbortController()
+    const { results, onStep } = recorder()
+    const outcome = runScenario(
+      scenario([{ kind: 'check', title: 'bekler', run: () => eventually(async () => { throw new Error('henüz değil') },
+        { timeoutMs: 60_000, intervalMs: 100, signal: controller.signal }) }]),
+      { log: [] },
+      { onStep, confirm: async () => true, signal: controller.signal },
+    )
+
+    await vi.advanceTimersByTimeAsync(300)
+    controller.abort()
+    await vi.advanceTimersByTimeAsync(100)
+
+    await expect(outcome).resolves.toBe('cancelled')
+    expect(results[0].status).toBe('skipped')
+  })
+
   it('süre dolunca son hatayla ve süreyle birlikte başarısız olur', async () => {
     const result = eventually(async () => { throw new Error('stok 0, beklenen 8') },
       { timeoutMs: 1_000, intervalMs: 100 })

@@ -65,6 +65,10 @@ export async function runScenario<C>(scenario: Scenario<C>, ctx: C, hooks: RunHo
         try {
           await step.run?.(ctx)
         } catch (e) {
+          if (e instanceof CancelledError || hooks.signal?.aborted) {
+            skipFrom(i)
+            return 'cancelled'
+          }
           hooks.onStep(i, { status: 'failed', error: messageOf(e), durationMs: Date.now() - started })
           skipFrom(i + 1)
           return 'failed'
@@ -81,15 +85,18 @@ export async function runScenario<C>(scenario: Scenario<C>, ctx: C, hooks: RunHo
 export interface EventuallyOptions {
   timeoutMs: number
   intervalMs: number
+  /** Kullanıcı "Durdur" derse beklemeyi süre dolmadan bırakır. */
+  signal?: AbortSignal
 }
 
 /**
  * {@code probe} hata fırlatmayı bırakana kadar tekrar dener ("vitrin kısa gecikmeyle aynı duruma gelir").
  * Süre dolarsa son hatayı, ne kadar beklendiğiyle birlikte fırlatır.
  */
-export async function eventually<T>(probe: () => Promise<T>, { timeoutMs, intervalMs }: EventuallyOptions): Promise<T> {
+export async function eventually<T>(probe: () => Promise<T>, { timeoutMs, intervalMs, signal }: EventuallyOptions): Promise<T> {
   const deadline = Date.now() + timeoutMs
   for (;;) {
+    if (signal?.aborted) throw new CancelledError()
     try {
       return await probe()
     } catch (e) {
@@ -103,6 +110,12 @@ export async function eventually<T>(probe: () => Promise<T>, { timeoutMs, interv
 
 function formatSeconds(ms: number) {
   return ms >= 1_000 ? `${Math.round(ms / 1_000)} sn` : `${ms} ms`
+}
+
+export class CancelledError extends Error {
+  constructor() {
+    super('iptal edildi')
+  }
 }
 
 export function messageOf(e: unknown): string {

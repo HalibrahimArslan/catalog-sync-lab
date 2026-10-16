@@ -34,6 +34,7 @@ RabbitMQ, DDD, Hexagonal ve Onion mimarisini TDD ile öğrenme projesi.
 | `backoffice/{model,domain-service,application,infrastructure}` | Ürün ve stoğun asıl kaydı; outbox ile yayın (port 8081) |
 | `storefront/{model,domain-service,application,infrastructure}` | Vitrin; event'leri tüketip kalıcı kataloğa uygular (port 8082) |
 | `acceptance` | US1–US7 Cucumber senaryoları; iki uygulama birlikte, uçtan uca |
+| `ui` | Senaryo Konsolu (React + TS): senaryoları çalışan sisteme karşı adım adım koşturur; bkz. [ui/README.md](ui/README.md) |
 
 ## Yerel altyapı
 ```bash
